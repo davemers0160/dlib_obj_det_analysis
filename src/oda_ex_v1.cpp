@@ -422,8 +422,17 @@ int main(int argc, char** argv)
                 dlib::input_layer(test_net).get_pyramid_padding(),
                 dlib::input_layer(test_net).get_pyramid_outer_padding());
 
+
+            dlib::matrix<float> network_output = dlib::image_plane(test_net.subnet().get_output(), 0, 0);
+            for (long k = 1; k < test_net.subnet().get_output().k(); ++k)
+                network_output = dlib::max_pointwise(network_output, dlib::image_plane(test_net.subnet().get_output(), 0, k));
+
+
             win.clear_overlay();
-            win.set_image(tiled_img);
+            win.set_image(jet(network_output, 0.0, -3.0));
+
+            dlib::sleep(50);
+            std::cin.ignore();
 
             std::cout << "------------------------------------------------------------------" << std::endl;
             std::cout << "Image " << std::right << std::setw(5) << std::setfill('0') << idx << ": " << te_image_files[idx] << std::endl;
