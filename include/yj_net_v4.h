@@ -94,7 +94,7 @@ using obj_net_type = dlib::loss_mmod<con9<1,
 
 using aobj_net_type = dlib::loss_mmod<con9<1,
     arcon5<128, arcon5<64, arcon5<64, adownsampler<64, 32, 16,
-    dlib::input_rgb_image_pyramid<dlib::pyramid_down<8>>
+    dlib::input_rgb_image_pyramid<dlib::pyramid_down<4>>
     >>>> >>;
 
 // ----------------------------------------------------------------------------------------
