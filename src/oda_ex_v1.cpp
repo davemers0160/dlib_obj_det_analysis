@@ -28,6 +28,7 @@
 #include "num2string.h"
 #include "overlay_bounding_box.h"
 //#include "array_image_operations.h"
+#include "add_border.h"
 
 // Net Version
 #include "yj_net_v4.h"
@@ -53,6 +54,10 @@
 
 
 // -------------------------------GLOBALS--------------------------------------
+// This is the number used for the pyramid down input to the net
+extern const uint32_t pyr_down_size;
+// This is the reduction size per image in the image pyramid
+//extern const double pyr_scale;
 
 std::string platform;
 
@@ -122,23 +127,13 @@ int main(int argc, char** argv)
 	auto stop_time = chrono::system_clock::now();
 	auto elapsed_time = chrono::duration_cast<d_sec>(stop_time - start_time);
 
-
-
     std::pair<uint32_t, uint32_t> target_size(45, 100);
-	//uint32_t min_target_size = 45;  // 20 min_object_length_short_dimension
-	//uint32_t max_target_size = 100;  // 70 min_object_length_long_dimension
-	//std::vector<int32_t> gpu;
-    //uint64_t one_step_calls = 0;
-    //uint64_t epoch = 0;
-    //uint64_t index = 0;   
+ 
 
     //create window to display images
     dlib::image_window win;
     dlib::rgb_pixel color;
     dlib::matrix<dlib::rgb_pixel> tmp_img;
-
-    // set the learning rate multipliers: 0 means freeze the layers; r1 = learning rate multiplier, r2 = learning rate bias multiplier
-    //double r1 = 1.0, r2 = 1.0;
 
     dlib::rand rnd;
     rnd = dlib::rand(time(NULL));
@@ -381,6 +376,11 @@ int main(int argc, char** argv)
         // this matrix will contain the results of the training and testing
 		dlib::matrix<double, 1, 6> test_results = dlib::zeros_matrix<double>(1, 6);
 
+        // Get the type of pyramid the CNN used
+        using pyramid_type = std::remove_reference<decltype(dlib::input_layer(test_net))>::type::pyramid_type;
+
+        pyramid_type tmp_pyr;
+        double pyr_scale = dlib::pyramid_rate(tmp_pyr);
 
 //-----------------------------------------------------------------------------
 //          EVALUATE THE FINAL NETWORK PERFORMANCE
@@ -415,8 +415,8 @@ int main(int argc, char** argv)
 
             std::vector<dlib::rectangle> rects;
             dlib::matrix<dlib::rgb_pixel> tiled_img;
-            // Get the type of pyramid the CNN used
-            using pyramid_type = std::remove_reference<decltype(dlib::input_layer(test_net))>::type::pyramid_type;
+
+            
             // And tell create_tiled_pyramid to create the pyramid using that pyramid type.
             dlib::create_tiled_pyramid<pyramid_type>(test_images[idx], tiled_img, rects,
                 dlib::input_layer(test_net).get_pyramid_padding(),
@@ -427,9 +427,46 @@ int main(int argc, char** argv)
             for (long k = 1; k < test_net.subnet().get_output().k(); ++k)
                 network_output = dlib::max_pointwise(network_output, dlib::image_plane(test_net.subnet().get_output(), 0, k));
 
+            const double network_output_scale = test_images[idx].nc() / (double)network_output.nc();
+            resize_image(network_output_scale, network_output);
+
+
+
+            dlib::add_border(network_output, network_output, dlib::input_layer(test_net).get_pyramid_outer_padding());
 
             win.clear_overlay();
-            win.set_image(jet(network_output, 0.0, -3.0));
+            win.set_image(dlib::jet(network_output, 0.0, -2.5));
+
+
+            // Also, overlay network_output on top of the tiled image pyramid and display it.
+            for (long r = 0; r < network_output.nr(); ++r)
+            {
+                for (long c = 0; c < tiled_img.nc(); ++c)
+                {
+                    //dlib::dpoint tmp(c, r);
+                    //tmp = dlib::input_tensor_to_output_tensor(test_net, tmp);
+                    //tmp = dlib::point(network_output_scale*tmp);
+                    //if (get_rect(network_output).contains(tmp))
+                    //{
+                    //    float val = network_output(tmp.y(), tmp.x());
+                    //    // alpha blend the network output pixel with the RGB image to make our
+                    //    // overlay.
+                    //    //dlib::rgb_alpha_pixel p;
+                        dlib::rgb_pixel p;
+                        dlib::assign_pixel(p, dlib::colormap_jet(network_output(r,c), 0.0, -2.5));
+                    //    //p.alpha = 120;
+                        assign_pixel(tiled_img(r, c), dlib::rgb_pixel(0.5*tiled_img(r, c).red + 0.5*p.red, 0.5*tiled_img(r, c).green + 0.5*p.green, 0.5*tiled_img(r, c).blue + 0.5*p.blue));
+                    //}
+                }
+            }
+            // If you look at this image you can see that the vehicles have bright red blobs on
+            // them.  That's the CNN saying "there is a car here!".  You will also notice there is
+            // a certain scale at which it finds cars.  They have to be not too big or too small,
+            // which is why we have an image pyramid.  The pyramid allows us to find cars of all
+            // scales.
+            dlib::image_window win_pyr_overlay(tiled_img, "Detection scores on image pyramid");
+
+
 
             dlib::sleep(50);
             std::cin.ignore();

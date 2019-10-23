@@ -8,6 +8,12 @@
 
 #include "input_array_image_pryamid.h"
 
+// ------------------------- Globals used to setup the Network ----------------------------
+// This is the number used for the pyramid down input to the net
+extern const uint32_t pyr_down_size = 4;
+// This is the reduction size per image in the image pyramid
+//extern const double pyr_scale = (double)(pyr_down_size - 1) / (double)pyr_down_size;   
+
 extern const uint32_t array_depth = 3;
 //extern const uint32_t secondary = 1;
 
@@ -89,12 +95,12 @@ input[4] -> downsampler -> rcon3 -> rcon3 -> rcon3 -> con6
 
 using obj_net_type = dlib::loss_mmod<con9<1,
     rcon5<128, rcon5<64, rcon5<64, downsampler<64, 32, 16,
-    dlib::input_rgb_image_pyramid<dlib::pyramid_down<8>>
+    dlib::input_rgb_image_pyramid<dlib::pyramid_down<pyr_down_size>>
     >>>> >>;
 
 using aobj_net_type = dlib::loss_mmod<con9<1,
     arcon5<128, arcon5<64, arcon5<64, adownsampler<64, 32, 16,
-    dlib::input_rgb_image_pyramid<dlib::pyramid_down<4>>
+    dlib::input_rgb_image_pyramid<dlib::pyramid_down<pyr_down_size>>
     >>>> >>;
 
 // ----------------------------------------------------------------------------------------
