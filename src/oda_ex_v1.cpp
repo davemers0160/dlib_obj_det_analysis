@@ -22,21 +22,23 @@
 // Custom includes
 #include "obj_detector.h"
 #include "get_platform.h"
-//#include "file_parser.h"
+#include "file_ops.h"
 #include "get_current_time.h"
-#include "gorgon_capture.h"
+//#include "gorgon_capture.h"
 #include "num2string.h"
 #include "overlay_bounding_box.h"
-//#include "array_image_operations.h"
 #include "add_border.h"
 
 // Net Version
-#include "yj_net_v4.h"
+//#include "yj_net_v4.h"
+#include "tfd_net_v02.h"
 #include "load_data.h"
 #include "eval_net_performance.h"
 //#include "enhanced_array_cropper.h"
 //#include "random_channel_swap.h"
 //#include "enhanced_channel_swap.h"
+
+#include "array_image_operations.h"
 
 
 // dlib includes
@@ -58,6 +60,8 @@
 extern const uint32_t pyr_down_size;
 // This is the reduction size per image in the image pyramid
 //extern const double pyr_scale;
+
+extern const uint32_t array_depth;
 
 std::string platform;
 
@@ -315,7 +319,7 @@ int main(int argc, char** argv)
         dlib::set_dnn_prefer_smallest_algorithms();
 
         // load the network from the saved file
-        aobj_net_type test_net;
+        anet_type test_net;
 
         std::cout << std::endl << "------------------------------------------------------------------" << std::endl; 
         std::cout << "Loading network: " << (network_weights_file) << std::endl;
