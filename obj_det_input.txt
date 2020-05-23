@@ -1,13 +1,18 @@
 # data file for loading information into dlib based object detector projects
 # '#' are used for comments and will not be read in by the parser
 # The file is organized in the following manner
-# Line 1: data_file (std::string): This file contains a list of images and labels used for testing
-# Line 2: net_file (std::string): This file contains the weights used in a given network architecture
-# Line 3: results_name (std::string): This is a string to append to the log files and images
-# Line 4: results_location (std::string): directory where the results should be saved
- 
-D:/Projects/yellow_jacket/data/capture_s4/capture1_train_input_resize_v2.txt
-#D:/Projects/yellow_jacket/data/capture1/capture1_test_input.txt
-D:/Projects/yellow_jacket/nets/yj_v4_s4_v4_BEAST_final_net.dat
-v4_s4_v4_test_
-D:/Projects/dlib_obj_det_analysis/results/
+
+#1 test data file: this is the file that contains the list of associated test data, text file format
+# text file format: 0 -> grouped boxes (default), 1 -> open images bounding box format
+D:/Projects/object_detection_data/FaceDetection/thermal_face_test_v1.txt, 0
+#/home/owner/Projects/object_detection_data/FaceDetection/thermal_face_test_v1.txt, 0
+
+#2 network: this tells the code which trained network file to load
+D:/Projects/dlib_obj_det_run/nets/50918_0/nets/tfd_v02_30_30_100_HPC_final_net.dat
+#/home/owner/Projects/dlib_obj_det_run/nets/50920_0/nets/tfd_v02_35_40_100_HPC_final_net.dat
+
+#3 version name: this is used as the prepend to all files, must end with "_"
+tfd_v02_
+
+#4 root location where the results will be saved -> must have the following folders: nets, results, result_images
+../results/tfd_v02/
